@@ -45,6 +45,7 @@ async function run() {
     await client.connect();
     const classesCollection = client.db("linguaLearnDB").collection("classes");
     const usersCollection = client.db("linguaLearnDB").collection("users");
+    const cartsCollection = client.db("linguaLearnDB").collection("carts");
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -128,6 +129,11 @@ async function run() {
       const result = await classesCollection.find(query).toArray();
       res.send(result);
 
+    })
+    app.post('/carts', async(req,res)=>{
+      const item = req.body;
+      const result = await cartsCollection.insertOne(item)
+      res.send(result)
     })
 
     // Send a ping to confirm a successful connection
