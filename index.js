@@ -143,6 +143,13 @@ async function run() {
       const result = await classesCollection.find(query).toArray();
       res.send(result); 
     })
+    app.get('/see-feedback/:id',   async(req, res)=>{
+      const id = req.params.id;
+      const query ={_id: new ObjectId(id)};
+      const result = await classesCollection.findOne(query)
+      
+      res.send(result);
+    })
     //admin apis 
     app.get('/manage-classes',verifyJWT, verifyAdmin, async(req, res)=>{
       const result = await classesCollection.find().toArray();
@@ -160,7 +167,7 @@ async function run() {
       const result = await classesCollection.updateOne(filter, updateDoc);
       res.send(result);
     })
-    app.put('/feedback/:id', async(req, res)=>{
+    app.put('/feedback/:id', verifyJWT, verifyAdmin, async(req, res)=>{
       const id = req.params.id;
       const query = req.body;
       const filter = {_id: new ObjectId(id)};
