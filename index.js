@@ -124,12 +124,14 @@ async function run() {
       const result = await classesCollection.find(query).sort({enrolled: -1}).toArray();
       res.send(result);
     });
+    //add approved classes apis 
     app.get('/all-classes',async(req,res)=>{
       const query = {status: 'approved'};
       const result = await classesCollection.find(query).toArray();
       res.send(result);
 
     })
+    //instructor apis 
     app.post('/add-class', verifyJWT, verifyInstructor, async(req, res)=>{
       const newClass = req.body;
       const result = await classesCollection.insertOne(newClass);
@@ -140,6 +142,23 @@ async function run() {
       const query = {email: email};
       const result = await classesCollection.find(query).toArray();
       res.send(result); 
+    })
+    //admin apis 
+    app.get('/manage-classes',verifyJWT, verifyAdmin, async(req, res)=>{
+      const result = await classesCollection.find().toArray();
+      res.send(result)
+    })
+    app.put('/approved-deny/:id', verifyJWT, verifyAdmin, async(req, res)=>{
+      const id = req.params.id;
+      const query = req.body;
+      const filter = {_id: new ObjectId(id)};
+      const updateDoc = {
+        $set: {
+          status: query.status
+        },
+      };
+      const result = await classesCollection.updateOne(filter, updateDoc);
+      res.send(result);
     })
     app.post('/carts', async(req,res)=>{
       const item = req.body;
