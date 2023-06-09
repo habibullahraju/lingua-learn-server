@@ -160,6 +160,20 @@ async function run() {
       const result = await classesCollection.updateOne(filter, updateDoc);
       res.send(result);
     })
+    app.put('/feedback/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = req.body;
+      const filter = {_id: new ObjectId(id)};
+      const updateDoc = {
+        $set: {
+          feedback: query.feedback
+        },
+      };
+      const result = await classesCollection.updateOne(filter,updateDoc);
+      res.send(result)
+      
+    })
+
     app.post('/carts', async(req,res)=>{
       const item = req.body;
       const result = await cartsCollection.insertOne(item)
