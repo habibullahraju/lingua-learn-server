@@ -87,6 +87,10 @@ async function run() {
         res.send(result);
 
     })
+    app.get('/all-users', verifyJWT, verifyAdmin, async(req, res)=>{
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    })
     app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       if (req.decoded.email !== email) {
@@ -143,7 +147,7 @@ async function run() {
       const result = await classesCollection.find(query).toArray();
       res.send(result); 
     })
-    app.get('/see-feedback/:id',   async(req, res)=>{
+    app.get('/see-feedback/:id',verifyJWT, verifyInstructor, async(req, res)=>{
       const id = req.params.id;
       const query ={_id: new ObjectId(id)};
       const result = await classesCollection.findOne(query)
@@ -180,7 +184,22 @@ async function run() {
       res.send(result)
       
     })
+    app.put('/change-role/:id', verifyJWT, verifyAdmin, async(req, res)=>{
+      const id = req.params.id;
+      const query = req.body;
+      const filter = {_id: new ObjectId(id)}
+      const updateDoc = {
+        $set: {
+          role: query.role
+        },
+      };
+      const result = await usersCollection.updateOne(filter,updateDoc);
+      res.send(result)
 
+
+
+    })
+      // user card related apis
     app.post('/carts', async(req,res)=>{
       const item = req.body;
       const result = await cartsCollection.insertOne(item)
