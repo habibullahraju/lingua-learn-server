@@ -247,25 +247,26 @@ async function run() {
     // payments api and delete post and update
     app.post("/payments", verifyJWT, async (req, res) => {
       const payment = req.body;
-      // const query = {_id: {$in: payment.classId.map(id => new ObjectId(id))}}
+
       const enrollClass = {
         email: payment.email,
         enrolledClassesId: payment.classId,
       };
-      const queryDelete = {
-        _id: {$in: payment.itemsId.map((id) => new ObjectId(id))},
-      };
+      const id = payment.classId;
+      const query = {_id: new ObjectId(id)};
 
-      // const updateDoc = {
-      //   $set: {
-      //     availableSeat: payment.availableSeat.map(st => st),
-      //   },
-      // };
+      const queryDelete = {classId: id};
+
+      const updateDoc = {
+        $set: {
+          availableSeat: payment.availableSeat - 1,
+        },
+      };
       const enrolledResult = await enrolledCollection.insertOne(enrollClass);
-      // const updateResult = await classesCollection.updateMany(query,updateDoc)
+      const updateResult = await classesCollection.updateMany(query, updateDoc);
       const result = await paymentCollection.insertOne(payment);
-      const deleteResult = await cartsCollection.deleteMany(queryDelete);
-      res.send({result, enrolledResult, deleteResult});
+      const deleteResult = await cartsCollection.deleteOne(queryDelete);
+      res.send({result, updateResult, enrolledResult, deleteResult});
     });
     app.get("/enrolled-classes/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
