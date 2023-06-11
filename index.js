@@ -43,12 +43,14 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const classesCollection = client.db("linguaLearnDB").collection("classes");
     const usersCollection = client.db("linguaLearnDB").collection("users");
     const cartsCollection = client.db("linguaLearnDB").collection("carts");
     const paymentCollection = client.db("linguaLearnDB").collection("payment");
-    const enrolledCollection = client.db("linguaLearnDB").collection("enrolled");
+    const enrolledCollection = client
+      .db("linguaLearnDB")
+      .collection("enrolled");
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -232,26 +234,28 @@ async function run() {
       const result = await cartsCollection.deleteOne(query);
       res.send(result);
     });
-    app.post('/create-payment-intent', verifyJWT, async (req,res)=>{
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const {price} = req.body;
       const amount = price * 100;
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
-        currency: 'usd',
-        payment_method_types: ['card']
-      })
-      res.send({clientSecret: paymentIntent.client_secret})
-    })
-    // payments api and delete post and update 
-    app.post('/payments', verifyJWT, async(req,res)=>{
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({clientSecret: paymentIntent.client_secret});
+    });
+    // payments api and delete post and update
+    app.post("/payments", verifyJWT, async (req, res) => {
       const payment = req.body;
       // const query = {_id: {$in: payment.classId.map(id => new ObjectId(id))}}
       const enrollClass = {
         email: payment.email,
-        enrolledClassesId: payment.classId
-      }
-      const queryDelete = {_id: {$in: payment.itemsId.map(id => new ObjectId(id))}}
-    
+        enrolledClassesId: payment.classId,
+      };
+      const queryDelete = {
+        _id: {$in: payment.itemsId.map((id) => new ObjectId(id))},
+      };
+
       // const updateDoc = {
       //   $set: {
       //     availableSeat: payment.availableSeat.map(st => st),
@@ -260,17 +264,24 @@ async function run() {
       const enrolledResult = await enrolledCollection.insertOne(enrollClass);
       // const updateResult = await classesCollection.updateMany(query,updateDoc)
       const result = await paymentCollection.insertOne(payment);
-      const deleteResult = await cartsCollection.deleteMany(queryDelete)
+      const deleteResult = await cartsCollection.deleteMany(queryDelete);
       res.send({result, enrolledResult, deleteResult});
- 
-      
-    })
-    app.get('/enrolled-classes/:email', verifyJWT,  async(req, res)=>{
-      const email = req.params.email
-      const query = {email: email}
+    });
+    app.get("/enrolled-classes/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const query = {email: email};
       const result = await enrolledCollection.find(query).toArray();
       res.send(result);
-    })
+    });
+    app.get("/payment-history/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const query = {email: email};
+      const result = await paymentCollection
+        .find(query)
+        .sort({price: -1})
+        .toArray();
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ping: 1});
